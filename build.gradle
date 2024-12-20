@@ -1,0 +1,55 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.23'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'java'
+    id 'application'
+}
+
+group = 'net.bernerbits.dnd'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    javaVersion = 21
+    javafxVersion = '21'
+}
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation group: 'org.openjfx', name: 'javafx-graphics', version: '21'
+    implementation group: 'org.openjfx', name: 'javafx-swing', version: '21'
+    implementation group: 'org.openjfx', name: 'javafx-controls', version: '21'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "21"
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.release.set(21)
+}
+
+
+javafx {
+    version = "21"
+    modules = ['javafx.graphics', 'javafx.swing', 'javafx.controls', 'javafx.base']
+}
+
+application {
+    mainClass = 'net.bernerbits.dnd.donjon.MainKt'
+}
