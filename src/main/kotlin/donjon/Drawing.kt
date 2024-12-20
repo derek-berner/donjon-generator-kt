@@ -16,27 +16,27 @@ import java.util.concurrent.SynchronousQueue
 import javax.imageio.ImageIO
 import kotlin.random.Random
 
-fun imageDungeon(dungeon: Dungeon): String {
+fun imageDungeon(dungeon: Dungeon, style: DungeonStyle): String {
   JFXPanel()
   val outputFilenameQueue = SynchronousQueue<String>()
 
   Platform.runLater {
     try {
-      val image = scaleDungeon(dungeon)
+      val image = scaleDungeon(dungeon, style)
       val canvas = Canvas(image.width.toDouble(), image.height.toDouble())
       val gc = canvas.graphicsContext2D
-      val palette = dungeon.mapStyle.palette
+      val palette = style.mapStyle.palette
 
       // Create and draw the base layer
-      val baseLayer = createBaseLayer(gc, dungeon, image, palette)
+      val baseLayer = createBaseLayer(gc, dungeon, style, image, palette)
       // Fill the base layer and other features
-      fillImage(gc, dungeon, image, palette)
+      fillImage(gc, dungeon, style, image, palette)
       openCells(gc, dungeon, baseLayer, image, palette)
       drawWalls(gc, dungeon, image, palette)
       drawDoors(gc, dungeon, image, palette)
-      drawLabels(gc, dungeon, image, palette)
       if (dungeon.stairs.isNotEmpty())
         drawStairs(gc, dungeon, image, palette)
+      drawLabels(gc, dungeon, image, palette)
 
       // Save the Canvas to a file
       val outputFilename = "${dungeon.seed}.png"
@@ -58,14 +58,14 @@ fun saveCanvasToFile(canvas: Canvas, filename: String) {
   ImageIO.write(bufferImage, "png", File(filename))
 }
 
-fun scaleDungeon(dungeon: Dungeon): DungeonImage {
-  val cellSize = dungeon.cellSize
+fun scaleDungeon(dungeon: Dungeon, style: DungeonStyle): DungeonImage {
+  val cellSize = style.cellSize
   val width = ((dungeon.nCols + 1) * cellSize) + 1
   val height = ((dungeon.nRows + 1) * cellSize) + 1
-  return DungeonImage(cellSize, dungeon.mapStyle, width, height, width - 1, height - 1)
+  return DungeonImage(cellSize, style.mapStyle, width, height, width - 1, height - 1)
 }
 
-fun createBaseLayer(gc: GraphicsContext, dungeon: Dungeon, image: DungeonImage, palette: Palette): Image {
+fun createBaseLayer(gc: GraphicsContext, dungeon: Dungeon, style: DungeonStyle, image: DungeonImage, palette: Palette): Image {
   val canvas = Canvas(image.width.toDouble(), image.height.toDouble()) // Create a new Canvas for base layer
   val baseGc = canvas.graphicsContext2D
 
@@ -100,7 +100,7 @@ fun createBaseLayer(gc: GraphicsContext, dungeon: Dungeon, image: DungeonImage, 
   gridColor?.let {
     baseGc.stroke = it
     baseGc.lineWidth = 0.5
-    drawGrid(baseGc, dungeon, image, it)
+    drawGrid(baseGc, style, image, it)
   }
 
   val base = canvas.toWritableImage()
@@ -123,8 +123,8 @@ fun selectTile(random: Random, tile: ImagePattern, dim: Double): ImagePattern {
   return ImagePattern(tile.image, srcX, srcY, dim, dim, false)
 }
 
-fun drawGrid(gc: GraphicsContext, dungeon: Dungeon, image: DungeonImage, color: Color) {
-  when (dungeon.grid) {
+fun drawGrid(gc: GraphicsContext, style: DungeonStyle, image: DungeonImage, color: Color) {
+  when (style.grid) {
     Grid.SQUARE -> drawSquareGrid(gc, image, color)
     Grid.HEX -> drawHexGrid(gc, image, color)
     else -> {
@@ -174,7 +174,7 @@ fun drawHexGrid(gc: GraphicsContext, image: DungeonImage, color: Color) {
   }
 }
 
-fun fillImage(gc: GraphicsContext, dungeon: Dungeon, image: DungeonImage, palette: Palette) {
+fun fillImage(gc: GraphicsContext, dungeon: Dungeon, style: DungeonStyle, image: DungeonImage, palette: Palette) {
   val maxX = image.maxX.toDouble()
   val maxY = image.maxY.toDouble()
   val cellSize = image.cellSize
@@ -210,7 +210,7 @@ fun fillImage(gc: GraphicsContext, dungeon: Dungeon, image: DungeonImage, palett
   (palette.fillGrid ?: palette.grid)?.let {
     gc.stroke = it
     gc.lineWidth = 0.5
-    drawGrid(gc, dungeon, image, it)
+    drawGrid(gc, style, image, it)
   }
 }
 
@@ -447,7 +447,7 @@ fun drawLabels(gc: GraphicsContext, dungeon: Dungeon, image: DungeonImage, palet
           text.font = gc.font
           val bounds = text.layoutBounds
           val x = (c * cellSize) + (cellSize / 2.0) - (bounds.width / 2.0)
-          val y = (r * cellSize) - (cellSize / 2.0) + (bounds.height / 2.0) - 2
+          val y = (r * cellSize) + (cellSize / 2.0) + (bounds.height / 2.0) - 2
           // Draw the label on the canvas
           gc.fillText(label, x, y)
         }

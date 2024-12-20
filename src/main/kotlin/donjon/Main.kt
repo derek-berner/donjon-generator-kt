@@ -4,11 +4,16 @@ import java.security.SecureRandom
 
 fun main() {
   val dungeon = generateDungeon()
-  imageDungeon(dungeon)
+  val dungeonStyle = DungeonStyle(
+    mapStyle = MapStyle.STANDARD,
+    cellSize = 12,
+    grid = Grid.SQUARE,
+  )
+  imageDungeon(dungeon, dungeonStyle)
 }
 
 fun generateDungeon(): Dungeon {
-  val dungeon = Dungeon(
+  val dungeon = DungeonBuilder(
     nRows = 79,
     nCols = 79,
     dungeonLayout = null,
@@ -18,21 +23,9 @@ fun generateDungeon(): Dungeon {
     corridorLayout = CorridorLayout.BENT,
     removeDeadends = 20,
     addStairs = 2,
-    mapStyle = MapStyle.STANDARD,
-    cellSize = 12,
-    grid = Grid.SQUARE,
     seed = SecureRandom.getInstanceStrong().nextLong()
   )
-
-  dungeon.initialize()
-  dungeon.initializeCells()
-  dungeon.placeRooms()
-  dungeon.openRooms()
-  dungeon.labelRooms()
-  dungeon.corridors()
-  dungeon.placeStairs()
-  dungeon.cleanDungeon()
-
-  return dungeon
+  dungeon.generate()
+  return dungeon.buildDungeon()
 }
 
